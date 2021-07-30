@@ -1,7 +1,6 @@
 <!-- Please remove this file from your project -->
 <template>
   <div class="slowpage">
-    hello
   </div>
 </template>
 
@@ -10,7 +9,8 @@
 .slowpage {
   width: 800px;
   height: 600px;
-  border: 1px solid black;
+  border: 2px solid #3476DF;
+  border-radius: 5px;
 }
 
 </style>

@@ -36,6 +36,8 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/content
     '@nuxt/content',
+    '@nuxtjs/firebase',
+    
   ],
 
   // Content module configuration: https://go.nuxtjs.dev/config-content
@@ -48,6 +50,20 @@ export default {
   families: {
     download:true,
     'Overpass Mono': [300, 400, 600],
-  }
+  },
+    firebase:{
+      config: {
+        apiKey: process.env.fb_apiKey,
+        authDomain: process.env.fb_authDomain,
+        databaseURL: process.env.fb_databaseURL,
+        projectId: process.env.fb_projectId,
+        storageBucket: process.env.fb_storageBucket,
+        messagingSenderId: process.env.fb_messagingSenderId,
+        appId: process.env.fb_appId,
+      },
+      services: {
+        database: true,
+      }
+    },
 
 }
