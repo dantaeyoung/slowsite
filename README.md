@@ -18,15 +18,21 @@ npm install
 
 ### 2. Configure Firebase
 
-Copy `.env.example` to `.env` and fill in your Firebase credentials:
-
+**Option A: Environment Variables (Recommended for dev)**
 ```bash
 cp .env.example .env
+# Edit .env with your Firebase Realtime Database credentials
 ```
 
-Edit `.env` with your Firebase Realtime Database credentials.
+**Option B: Hardcode Config (Simplest for deployment)**
 
-### 3. Initialize Firebase Data
+Just edit `src/firebase.js` directly with your config. Firebase keys are safe to expose - see [FIREBASE_SECURITY.md](./FIREBASE_SECURITY.md).
+
+### 3. Set Firebase Security Rules
+
+See [FIREBASE_SECURITY.md](./FIREBASE_SECURITY.md) for the security rules to add in your Firebase Console. This is what keeps your data secure, not hiding the keys.
+
+### 4. Initialize Firebase Data
 
 Import `sample-data.json` into your Firebase Realtime Database to get started, or create the structure manually:
 
@@ -42,7 +48,7 @@ Import `sample-data.json` into your Firebase Realtime Database to get started, o
 }
 ```
 
-### 4. Add Index Card Images
+### 5. Add Index Card Images
 
 Place your photographed index cards in `public/cards/`:
 - `public/cards/home.jpg` - your home page card
@@ -59,12 +65,17 @@ npm run dev
 
 Open http://localhost:3000
 
-## Build for Production
+## Deployment
+
+This is a **100% static site** - no backend server needed!
 
 ```bash
-npm run build
-npm run preview
+npm run build  # Creates dist/ folder
 ```
+
+Deploy `dist/` to any static host: Firebase Hosting, Netlify, Vercel, GitHub Pages, or just upload to any web server.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## Project Structure
 
