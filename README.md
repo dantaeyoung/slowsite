@@ -1,69 +1,125 @@
-# slowsite
+# SlowSite
 
-## Build Setup
+A hand-drawn website that grows iteratively based on visitor interest.
+
+## Concept
+
+Each page is a photographed 4x6 index card with blue-outlined clickable zones. The site starts sparse and grows organically as visitors explore, with pages created in response to visitor clicks on unmapped areas.
+
+See [SPEC.md](./SPEC.md) for full details.
+
+## Setup
+
+### 1. Install Dependencies
 
 ```bash
-# install dependencies
-$ npm install
-
-# serve with hot reload at localhost:3000
-$ npm run dev
-
-# build for production and launch server
-$ npm run build
-$ npm run start
-
-# generate static project
-$ npm run generate
+npm install
 ```
 
-For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+### 2. Configure Firebase
 
-## Special Directories
+Copy `.env.example` to `.env` and fill in your Firebase credentials:
 
-You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
+```bash
+cp .env.example .env
+```
 
-### `assets`
+Edit `.env` with your Firebase Realtime Database credentials.
 
-The assets directory contains your uncompiled assets such as Stylus or Sass files, images, or fonts.
+### 3. Initialize Firebase Data
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/assets).
+Import `sample-data.json` into your Firebase Realtime Database to get started, or create the structure manually:
 
-### `components`
+```json
+{
+  "pages": {
+    "home": {
+      "imagePath": "/cards/home.jpg",
+      "imageMap": [ /* zones */ ]
+    }
+  },
+  "clicks": {}
+}
+```
 
-The components directory contains your Vue.js components. Components make up the different parts of your page and can be reused and imported into your pages, layouts and even other components.
+### 4. Add Index Card Images
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/components).
+Place your photographed index cards in `public/cards/`:
+- `public/cards/home.jpg` - your home page card
+- `public/cards/desk.jpg` - example second page
+- etc.
 
-### `layouts`
+Images should be portrait orientation (4x6 aspect ratio recommended).
 
-Layouts are a great help when you want to change the look and feel of your Nuxt app, whether you want to include a sidebar or have distinct layouts for mobile and desktop.
+## Development
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
+```bash
+npm run dev
+```
 
+Open http://localhost:3000
 
-### `pages`
+## Build for Production
 
-This directory contains your application views and routes. Nuxt will read all the `*.vue` files inside this directory and setup Vue Router automatically.
+```bash
+npm run build
+npm run preview
+```
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/get-started/routing).
+## Project Structure
 
-### `plugins`
+```
+slowsite/
+├── public/
+│   ├── cards/           # Index card photos
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   └── CardViewer.vue     # Display card with clickable zones
+│   ├── views/
+│   │   ├── CardPage.vue       # Fetch and display page
+│   │   └── MissingPage.vue    # "Being created" message
+│   ├── router/
+│   │   └── index.js           # Vue Router config
+│   ├── firebase.js            # Firebase initialization
+│   ├── App.vue
+│   └── main.js
+├── SPEC.md              # Full specification
+└── sample-data.json     # Example Firebase data structure
+```
 
-The plugins directory contains JavaScript plugins that you want to run before instantiating the root Vue.js Application. This is the place to add Vue plugins and to inject functions or constants. Every time you need to use `Vue.use()`, you should create a file in `plugins/` and add its path to plugins in `nuxt.config.js`.
+## How It Works
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/plugins).
+### Visitor Experience
 
-### `static`
+1. Start at home page (index card image)
+2. Hover over blue zones to see clickable areas
+3. Click to navigate to linked pages
+4. Clicking unmapped zones shows a "page being created" message and logs the interest
 
-This directory contains your static files. Each file inside this directory is mapped to `/`.
+### Builder Workflow (Coming Soon)
 
-Example: `/static/robots.txt` is mapped as `/robots.txt`.
+Phase 2 will add:
+- Upload interface for new cards
+- Manual zone mapping (draw polygons)
+- Click analytics dashboard
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/static).
+Phase 3 will add:
+- Automatic blue outline detection (CV)
+- Faster page creation
 
-### `store`
+## Tech Stack
 
-This directory contains your Vuex store files. Creating a file in this directory automatically activates Vuex.
+- **Vue 3** - Reactive UI framework
+- **Vite** - Fast build tool
+- **Vue Router** - Client-side routing
+- **Firebase Realtime Database** - Data storage and sync
+- **SVG** - Clickable zone overlays
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/store).
+## Philosophy
+
+- **Slow growth**: Site evolves based on genuine interest
+- **Handmade**: Every page is a physical artifact
+- **Playful**: Exploring feels like flipping through a sketchbook
+- **Personal**: Small, quirky, unique to the creator
+- **Hackable**: Simple enough to modify and experiment with
