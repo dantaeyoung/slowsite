@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
+import { getStorage } from 'firebase/storage'
 
 // OPTION 1: Use environment variables (for development)
 // Create a .env file with VITE_FB_* variables
@@ -31,5 +32,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 const database = getDatabase(app)
+const storage = getStorage(app)
 
-export { app, database }
+export { app, database, storage }
