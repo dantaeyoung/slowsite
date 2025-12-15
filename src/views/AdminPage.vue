@@ -47,13 +47,47 @@
       No provisional zones yet. Visitors can drag on cards to suggest areas.
     </div>
 
-    <div v-else class="zones-list">
-      <div v-for="zone in sortedZones" :key="zone.fullId" class="zone-card">
+    <!-- Consolidate toolbar -->
+    <div v-if="selectedCount > 0" class="consolidate-toolbar">
+      <span>{{ selectedCount }} selected</span>
+      <button
+        v-if="canConsolidate"
+        @click="consolidateSelected"
+        class="consolidate-btn"
+      >
+        Consolidate Selected
+      </button>
+      <span v-else-if="selectedCount >= 2" class="consolidate-warning">
+        Select zones from the same page to consolidate
+      </span>
+      <button @click="selectedZones = new Set()" class="clear-selection-btn">
+        Clear
+      </button>
+    </div>
+
+    <div class="zones-list">
+      <div
+        v-for="zone in sortedZones"
+        :key="zone.fullId"
+        class="zone-card"
+        :class="{ 'is-selected': isZoneSelected(zone), 'has-overlap': getOverlappingZones(zone).length > 0 }"
+      >
         <div class="zone-header">
-          <router-link :to="'/' + zone.pageId" class="page-link">
-            {{ zone.pageId }}
-          </router-link>
-          <span class="click-count">{{ zone.clickCount }} clicks</span>
+          <div class="zone-header-left">
+            <input
+              type="checkbox"
+              :checked="isZoneSelected(zone)"
+              @change="toggleZoneSelection(zone)"
+              class="zone-checkbox"
+            />
+            <router-link :to="'/' + zone.pageId" class="page-link">
+              {{ zone.pageId }}
+            </router-link>
+            <span v-if="getOverlappingZones(zone).length > 0" class="overlap-hint" :title="'Overlaps with ' + getOverlappingZones(zone).length + ' other zone(s)'">
+              ~{{ getOverlappingZones(zone).length }}
+            </span>
+          </div>
+          <span class="click-count">{{ zone.clickCount || 0 }} clicks</span>
         </div>
 
         <div class="zone-preview">
@@ -81,6 +115,9 @@
         <div class="zone-actions">
           <button @click="openPromoteModal(zone)" class="promote-btn">
             Promote to Page
+          </button>
+          <button @click="deleteZone(zone)" class="delete-btn">
+            Delete
           </button>
         </div>
 
@@ -282,6 +319,74 @@ const fetchAllData = async () => {
   }
 }
 
+// Calculate bounding box from coords
+const getBoundingBox = (coords) => {
+  const xs = coords.map(c => c[0])
+  const ys = coords.map(c => c[1])
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+  }
+}
+
+// Calculate overlap percentage between two zones
+const calculateOverlap = (zone1, zone2) => {
+  const box1 = getBoundingBox(zone1.coords)
+  const box2 = getBoundingBox(zone2.coords)
+
+  // Calculate intersection
+  const xOverlap = Math.max(0, Math.min(box1.maxX, box2.maxX) - Math.max(box1.minX, box2.minX))
+  const yOverlap = Math.max(0, Math.min(box1.maxY, box2.maxY) - Math.max(box1.minY, box2.minY))
+  const intersectionArea = xOverlap * yOverlap
+
+  // Calculate areas
+  const area1 = (box1.maxX - box1.minX) * (box1.maxY - box1.minY)
+  const area2 = (box2.maxX - box2.minX) * (box2.maxY - box2.minY)
+  const smallerArea = Math.min(area1, area2)
+
+  if (smallerArea === 0) return 0
+  return intersectionArea / smallerArea
+}
+
+// Overlap detection threshold
+const OVERLAP_THRESHOLD = 0.5
+
+// Track which zones have overlapping siblings
+const getOverlappingZones = (zone) => {
+  return allZones.value.filter(other =>
+    other.fullId !== zone.fullId &&
+    other.pageId === zone.pageId &&
+    calculateOverlap(zone, other) >= OVERLAP_THRESHOLD
+  )
+}
+
+// Selection state for manual consolidation
+const selectedZones = ref(new Set())
+
+const toggleZoneSelection = (zone) => {
+  const newSet = new Set(selectedZones.value)
+  if (newSet.has(zone.fullId)) {
+    newSet.delete(zone.fullId)
+  } else {
+    newSet.add(zone.fullId)
+  }
+  selectedZones.value = newSet
+}
+
+const isZoneSelected = (zone) => selectedZones.value.has(zone.fullId)
+
+// Check if selected zones can be consolidated (2+ from same page)
+const canConsolidate = computed(() => {
+  if (selectedZones.value.size < 2) return false
+  const selected = allZones.value.filter(z => selectedZones.value.has(z.fullId))
+  const pageIds = new Set(selected.map(z => z.pageId))
+  return pageIds.size === 1 // All from same page
+})
+
+const selectedCount = computed(() => selectedZones.value.size)
+
 const sortedZones = computed(() => {
   const zones = [...allZones.value]
 
@@ -328,6 +433,64 @@ const getViewBox = (pageId) => {
 const formatPoints = (coords) => {
   if (!coords || coords.length === 0) return ''
   return coords.map(([x, y]) => `${x},${y}`).join(' ')
+}
+
+// Get merged bounding box for a group of zones
+const getMergedBounds = (zones) => {
+  const allCoords = zones.flatMap(z => z.coords)
+  const xs = allCoords.map(c => c[0])
+  const ys = allCoords.map(c => c[1])
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+  }
+}
+
+// Consolidate manually selected zones into one
+const consolidateSelected = async () => {
+  if (!canConsolidate.value) return
+
+  const selected = allZones.value.filter(z => selectedZones.value.has(z.fullId))
+  if (selected.length < 2) return
+
+  try {
+    const pageId = selected[0].pageId
+    const bounds = getMergedBounds(selected)
+    const totalClicks = selected.reduce((sum, z) => sum + (z.clickCount || 0), 0)
+
+    // Create merged coords (rectangle from bounding box)
+    const mergedCoords = [
+      [bounds.minX, bounds.minY],
+      [bounds.maxX, bounds.minY],
+      [bounds.maxX, bounds.maxY],
+      [bounds.minX, bounds.maxY]
+    ]
+
+    // Keep the first zone and update it with merged data
+    const keepZone = selected[0]
+    const keepRef = dbRef(database, `provisionalZones/${pageId}/${keepZone.zoneId}`)
+    await update(keepRef, {
+      coords: mergedCoords,
+      clickCount: totalClicks,
+      consolidatedAt: Date.now(),
+      consolidatedFrom: selected.length
+    })
+
+    // Delete the other zones
+    for (let i = 1; i < selected.length; i++) {
+      const zone = selected[i]
+      const zoneRef = dbRef(database, `provisionalZones/${pageId}/${zone.zoneId}`)
+      await remove(zoneRef)
+    }
+
+    // Clear selection and refresh
+    selectedZones.value = new Set()
+    await fetchAllData()
+  } catch (err) {
+    console.error('Error consolidating zones:', err)
+  }
 }
 
 const formatDate = (timestamp) => {
@@ -477,6 +640,19 @@ const promoteZone = async (zone, targetPageId) => {
 
   // Remove from local state
   allZones.value = allZones.value.filter(z => z.fullId !== zone.fullId)
+}
+
+const deleteZone = async (zone) => {
+  if (!confirm(`Delete this provisional zone? (${zone.clickCount || 0} clicks)`)) return
+
+  try {
+    const zoneRef = dbRef(database, `provisionalZones/${zone.pageId}/${zone.zoneId}`)
+    await remove(zoneRef)
+    allZones.value = allZones.value.filter(z => z.fullId !== zone.fullId)
+    selectedZones.value.delete(zone.fullId)
+  } catch (err) {
+    console.error('Error deleting zone:', err)
+  }
 }
 
 const goToPage = (pageId) => {
@@ -630,6 +806,66 @@ h1 {
   margin-bottom: 10px;
 }
 
+.zone-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zone-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.overlap-hint {
+  background: #ff9800;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: help;
+}
+
+.zone-card.has-overlap {
+  border-left: 3px solid #ff9800;
+}
+
+.zone-card.is-selected {
+  background: #fff8e1;
+  border-color: #ff9800;
+}
+
+.consolidate-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 16px;
+  background: #fff8e1;
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.consolidate-warning {
+  color: #666;
+  font-size: 13px;
+}
+
+.clear-selection-btn {
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.clear-selection-btn:hover {
+  background: #eee;
+}
+
 .page-link {
   font-weight: 600;
   color: #3476df;
@@ -690,6 +926,24 @@ h1 {
 
 .zone-actions {
   margin: 15px 0 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.consolidate-btn {
+  padding: 10px 20px;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.consolidate-btn:hover {
+  background: #f57c00;
 }
 
 .promote-btn {
@@ -705,6 +959,22 @@ h1 {
 
 .promote-btn:hover {
   background: #2860b8;
+}
+
+.delete-btn {
+  padding: 10px 20px;
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #c62828;
 }
 
 .zone-meta {
