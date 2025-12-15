@@ -45,7 +45,12 @@
             @mouseleave="hoveredZone = null"
           />
           <!-- Click count badge -->
-          <g v-if="zone.clickCount > 0" :transform="getBadgeTransform(zone.coords)">
+          <g
+            v-if="zone.clickCount > 0"
+            :transform="getBadgeTransform(zone.coords)"
+            class="badge-group"
+            :class="{ 'badge-pop': animatingBadge === zone.zoneId }"
+          >
             <circle r="12" class="badge-circle" />
             <text class="badge-text" text-anchor="middle" dy="4">{{ zone.clickCount }}</text>
           </g>
@@ -90,6 +95,7 @@ const hoveredZone = ref(null)
 
 // Provisional zones state
 const provisionalZones = ref([])
+const animatingBadge = ref(null)
 
 // Drawing state
 const isDrawing = ref(false)
@@ -235,6 +241,12 @@ const saveProvisionalZone = async (rect) => {
 
 const handleProvisionalClick = async (zone) => {
   try {
+    // Trigger badge animation
+    animatingBadge.value = zone.zoneId
+    setTimeout(() => {
+      animatingBadge.value = null
+    }, 400)
+
     // Increment click count and update lastClickedAt
     const zoneRef = dbRef(database, `provisionalZones/${props.pageData.pageId}/${zone.zoneId}`)
     await update(zoneRef, {
@@ -363,6 +375,11 @@ const logMissingPageClick = async (zone) => {
 }
 
 /* Click count badge */
+.badge-group {
+  transform-origin: center;
+  transition: transform 0.1s ease-out;
+}
+
 .badge-circle {
   fill: #666;
 }
@@ -371,5 +388,25 @@ const logMissingPageClick = async (zone) => {
   fill: white;
   font-size: 12px;
   font-weight: bold;
+}
+
+/* Badge pop animation */
+.badge-pop {
+  animation: badge-pop 0.4s ease-out;
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.4) rotate(15deg);
+  }
+  60% {
+    transform: scale(1.2) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
 </style>
