@@ -43,8 +43,9 @@ export function useNavigationHistory() {
   }
 
   const goToHistoryIndex = (index) => {
-    // Trim history to that point (remove everything after)
-    history.value = history.value.slice(0, index + 1)
+    // Trim history to before that point, so when the page loads
+    // and adds itself, it ends up at the right position
+    history.value = history.value.slice(0, index)
   }
 
   return {
