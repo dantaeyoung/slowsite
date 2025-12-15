@@ -1,14 +1,18 @@
 <template>
   <div class="card-page">
-    <div v-if="loading" class="loading">
-      <p>Loading card...</p>
-    </div>
+    <BreadcrumbHistory />
 
-    <div v-else-if="error" class="error">
-      <p>{{ error }}</p>
-    </div>
+    <div class="card-content">
+      <div v-if="loading" class="loading">
+        <p>Loading card...</p>
+      </div>
 
-    <CardViewer v-else-if="pageData" :pageData="pageData" />
+      <div v-else-if="error" class="error">
+        <p>{{ error }}</p>
+      </div>
+
+      <CardViewer v-else-if="pageData" :pageData="pageData" />
+    </div>
   </div>
 </template>
 
@@ -18,6 +22,8 @@ import { useRoute } from 'vue-router'
 import { database } from '../firebase'
 import { ref as dbRef, get } from 'firebase/database'
 import CardViewer from '../components/CardViewer.vue'
+import BreadcrumbHistory from '../components/BreadcrumbHistory.vue'
+import { useNavigationHistory } from '../composables/useNavigationHistory'
 
 const props = defineProps({
   pageId: {
@@ -30,6 +36,8 @@ const route = useRoute()
 const loading = ref(true)
 const error = ref(null)
 const pageData = ref(null)
+
+const { addToHistory } = useNavigationHistory()
 
 const fetchPageData = async (id) => {
   loading.value = true
@@ -44,6 +52,8 @@ const fetchPageData = async (id) => {
         pageId: id,
         ...snapshot.val()
       }
+      // Add to navigation history after successful load
+      addToHistory(id)
     } else {
       error.value = `Page "${id}" not found`
     }
@@ -71,6 +81,12 @@ watch(() => route.params.pageId, (newId) => {
 .card-page {
   width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-content {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
