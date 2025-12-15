@@ -1,0 +1,52 @@
+{
+  "pages": {
+    "home": {
+      "imagePath": "/cards/home.jpg",
+      "imageMap": [
+        {
+          "zoneId": "zone-1",
+          "coords": [[100, 150], [300, 150], [300, 350], [100, 350]],
+          "targetPage": "desk",
+          "label": "My Desk"
+        },
+        {
+          "zoneId": "zone-2",
+          "coords": [[350, 200], [500, 200], [500, 400]],
+          "targetPage": null,
+          "label": "Office Plant"
+        }
+      ],
+      "createdAt": 1700000000000,
+      "orientation": "portrait"
+    },
+    "desk": {
+      "imagePath": "/cards/desk.jpg",
+      "imageMap": [
+        {
+          "zoneId": "zone-1",
+          "coords": [[120, 180], [280, 180], [280, 320], [120, 320]],
+          "targetPage": "computer",
+          "label": "Computer"
+        },
+        {
+          "zoneId": "zone-2",
+          "coords": [[50, 400], [200, 400], [200, 500], [50, 500]],
+          "targetPage": null,
+          "label": "Notebook"
+        }
+      ],
+      "createdAt": 1700100000000,
+      "orientation": "portrait"
+    }
+  },
+  "clicks": {
+    "click-001": {
+      "pageId": "home",
+      "zoneId": "zone-2",
+      "targetPage": "office-plant",
+      "exists": false,
+      "timestamp": 1700200000000,
+      "userAgent": "Mozilla/5.0..."
+    }
+  }
+}
