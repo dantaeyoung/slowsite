@@ -376,22 +376,27 @@ const logMissingPageClick = async (zone) => {
 
 /* Click count badge */
 .badge-group {
+  transform-box: fill-box;
   transform-origin: center;
-  transition: transform 0.1s ease-out;
 }
 
 .badge-circle {
   fill: #666;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .badge-text {
   fill: white;
   font-size: 12px;
   font-weight: bold;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 /* Badge pop animation */
-.badge-pop {
+.badge-pop .badge-circle,
+.badge-pop .badge-text {
   animation: badge-pop 0.4s ease-out;
 }
 
@@ -400,13 +405,13 @@ const logMissingPageClick = async (zone) => {
     transform: scale(1) rotate(0deg);
   }
   30% {
-    transform: scale(1.4) rotate(15deg);
+    transform: scale(1.5) rotate(120deg);
   }
   60% {
-    transform: scale(1.2) rotate(-5deg);
+    transform: scale(1.2) rotate(280deg);
   }
   100% {
-    transform: scale(1) rotate(0deg);
+    transform: scale(1) rotate(360deg);
   }
 }
 </style>

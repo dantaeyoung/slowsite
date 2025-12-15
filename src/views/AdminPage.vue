@@ -2,11 +2,15 @@
   <div class="admin-page">
     <div class="admin-header">
       <div>
-        <h1>Provisional Zones</h1>
-        <p class="subtitle">Areas visitors have marked as interesting</p>
+        <h1>Admin</h1>
+        <p class="subtitle">Provisional zones & page connections</p>
       </div>
-      <router-link to="/admin/graph" class="graph-link">View Page Graph</router-link>
+      <router-link to="/admin/graph" class="graph-link mobile-only">View Page Graph</router-link>
     </div>
+
+    <div class="admin-layout">
+      <!-- Zones Panel -->
+      <div class="zones-panel">
 
     <!-- Sort controls -->
     <div v-if="allZones.length > 0" class="sort-controls">
@@ -84,6 +88,14 @@
           <span>Created: {{ formatDate(zone.createdAt) }}</span>
           <span v-if="zone.lastClickedAt"> · Last clicked: {{ formatDateTime(zone.lastClickedAt) }}</span>
         </div>
+      </div>
+    </div>
+      </div>
+
+      <!-- Graph Panel (desktop only) -->
+      <div class="graph-panel desktop-only">
+        <h3>Page Graph</h3>
+        <PageGraph :height="350" @nodeClick="goToPage" />
       </div>
     </div>
 
@@ -190,9 +202,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { database, storage } from '../firebase'
+import PageGraph from '../components/PageGraph.vue'
 import { ref as dbRef, get, set, update, remove, push } from 'firebase/database'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+
+const router = useRouter()
 
 const loading = ref(true)
 const allZones = ref([])
@@ -462,13 +478,65 @@ const promoteZone = async (zone, targetPageId) => {
   // Remove from local state
   allZones.value = allZones.value.filter(z => z.fullId !== zone.fullId)
 }
+
+const goToPage = (pageId) => {
+  router.push('/' + pageId)
+}
 </script>
 
 <style scoped>
 .admin-page {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.admin-layout {
+  display: flex;
+  gap: 30px;
+}
+
+.zones-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.graph-panel {
+  width: 400px;
+  flex-shrink: 0;
+}
+
+.graph-panel h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Mobile: hide graph, show link */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .graph-panel {
+    width: 100%;
+  }
+
+  .mobile-only {
+    display: inline-block;
+  }
+
+  .desktop-only {
+    display: none;
+  }
 }
 
 .admin-header {
