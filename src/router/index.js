@@ -3,6 +3,7 @@ import CardPage from '../views/CardPage.vue'
 import MissingPage from '../views/MissingPage.vue'
 import UploadPage from '../views/UploadPage.vue'
 import AdminPage from '../views/AdminPage.vue'
+import AdminGraphPage from '../views/AdminGraphPage.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/admin',
     name: 'admin',
     component: AdminPage
+  },
+  {
+    path: '/admin/graph',
+    name: 'admin-graph',
+    component: AdminGraphPage
   },
   {
     path: '/:pageId',
