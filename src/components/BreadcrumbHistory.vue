@@ -1,5 +1,5 @@
 <template>
-  <div class="breadcrumb-history" v-if="history.length > 0">
+  <div class="breadcrumb-history" v-if="history.length > 0 || currentPageId">
     <div class="breadcrumb-trail">
       <span
         v-for="(item, index) in history"
@@ -9,12 +9,15 @@
         <router-link
           :to="'/' + item.pageId"
           class="breadcrumb-link"
-          :class="{ current: index === history.length - 1 }"
           @click="onBreadcrumbClick(index)"
         >
           {{ item.pageId }}
         </router-link>
-        <span v-if="index < history.length - 1" class="breadcrumb-arrow">→</span>
+        <span class="breadcrumb-arrow">→</span>
+      </span>
+      <!-- Current page (not clickable) -->
+      <span v-if="currentPageId" class="breadcrumb-item">
+        <span class="breadcrumb-link current">{{ currentPageId }}</span>
       </span>
     </div>
     <button @click="clearHistory" class="clear-btn" title="Clear history">×</button>
@@ -24,13 +27,18 @@
 <script setup>
 import { useNavigationHistory } from '../composables/useNavigationHistory'
 
+const props = defineProps({
+  currentPageId: {
+    type: String,
+    default: null
+  }
+})
+
 const { history, clearHistory, goToHistoryIndex } = useNavigationHistory()
 
 const onBreadcrumbClick = (index) => {
-  // If clicking on a previous item, trim history to that point
-  if (index < history.value.length - 1) {
-    goToHistoryIndex(index)
-  }
+  // Trim history to before that point (page will be added when it loads via zone click)
+  goToHistoryIndex(index)
 }
 </script>
 

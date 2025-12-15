@@ -1,6 +1,6 @@
 <template>
   <div class="card-page">
-    <BreadcrumbHistory />
+    <BreadcrumbHistory :currentPageId="pageData?.pageId || props.pageId" />
 
     <div class="card-content">
       <div v-if="loading" class="loading">
@@ -23,7 +23,6 @@ import { database } from '../firebase'
 import { ref as dbRef, get } from 'firebase/database'
 import CardViewer from '../components/CardViewer.vue'
 import BreadcrumbHistory from '../components/BreadcrumbHistory.vue'
-import { useNavigationHistory } from '../composables/useNavigationHistory'
 
 const props = defineProps({
   pageId: {
@@ -36,8 +35,6 @@ const route = useRoute()
 const loading = ref(true)
 const error = ref(null)
 const pageData = ref(null)
-
-const { addToHistory } = useNavigationHistory()
 
 const fetchPageData = async (id) => {
   loading.value = true
@@ -52,8 +49,6 @@ const fetchPageData = async (id) => {
         pageId: id,
         ...snapshot.val()
       }
-      // Add to navigation history after successful load
-      addToHistory(id)
     } else {
       error.value = `Page "${id}" not found`
     }

@@ -70,6 +70,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { database } from '../firebase'
 import { ref as dbRef, push, get, set, update, increment } from 'firebase/database'
+import { useNavigationHistory } from '../composables/useNavigationHistory'
 
 const props = defineProps({
   pageData: {
@@ -79,6 +80,7 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const { addToHistory } = useNavigationHistory()
 const cardContainer = ref(null)
 const svgOverlay = ref(null)
 const imageLoaded = ref(false)
@@ -253,6 +255,8 @@ const handleProvisionalClick = async (zone) => {
 
 const handleZoneClick = async (zone) => {
   if (zone.targetPage) {
+    // Add current page to history before navigating
+    addToHistory(props.pageData.pageId)
     router.push(`/${zone.targetPage}`)
   } else {
     await logMissingPageClick(zone)
