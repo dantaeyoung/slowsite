@@ -3,6 +3,29 @@
     <h1>Provisional Zones</h1>
     <p class="subtitle">Areas visitors have marked as interesting</p>
 
+    <!-- Sort controls -->
+    <div v-if="allZones.length > 0" class="sort-controls">
+      <span class="sort-label">Sort by:</span>
+      <button
+        :class="{ active: sortMode === 'clicks' }"
+        @click="sortMode = 'clicks'"
+      >
+        Most Clicks
+      </button>
+      <button
+        :class="{ active: sortMode === 'recent' }"
+        @click="sortMode = 'recent'"
+      >
+        Recently Created
+      </button>
+      <button
+        :class="{ active: sortMode === 'page' }"
+        @click="sortMode = 'page'"
+      >
+        By Page
+      </button>
+    </div>
+
     <div v-if="loading" class="loading">Loading...</div>
 
     <div v-else-if="allZones.length === 0" class="empty">
@@ -165,6 +188,7 @@ const pageImages = ref({})
 const allPages = ref({})
 const imageDimensions = ref({})
 const imageRefs = ref({})
+const sortMode = ref('clicks')
 
 // Modal state
 const showModal = ref(false)
@@ -231,7 +255,18 @@ const fetchAllData = async () => {
 }
 
 const sortedZones = computed(() => {
-  return [...allZones.value].sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0))
+  const zones = [...allZones.value]
+
+  switch (sortMode.value) {
+    case 'clicks':
+      return zones.sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0))
+    case 'recent':
+      return zones.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    case 'page':
+      return zones.sort((a, b) => a.pageId.localeCompare(b.pageId))
+    default:
+      return zones
+  }
 })
 
 const availablePages = computed(() => {
@@ -422,7 +457,40 @@ h1 {
 
 .subtitle {
   color: #666;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.sort-controls button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.sort-controls button:hover {
+  border-color: #999;
+}
+
+.sort-controls button.active {
+  background: #3476df;
+  color: white;
+  border-color: #3476df;
 }
 
 .loading, .empty {
