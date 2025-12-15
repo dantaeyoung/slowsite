@@ -1,7 +1,12 @@
 <template>
   <div class="admin-page">
-    <h1>Provisional Zones</h1>
-    <p class="subtitle">Areas visitors have marked as interesting</p>
+    <div class="admin-header">
+      <div>
+        <h1>Provisional Zones</h1>
+        <p class="subtitle">Areas visitors have marked as interesting</p>
+      </div>
+      <router-link to="/admin/graph" class="graph-link">View Page Graph</router-link>
+    </div>
 
     <!-- Sort controls -->
     <div v-if="allZones.length > 0" class="sort-controls">
@@ -17,6 +22,12 @@
         @click="sortMode = 'recent'"
       >
         Recently Created
+      </button>
+      <button
+        :class="{ active: sortMode === 'clicked' }"
+        @click="sortMode = 'clicked'"
+      >
+        Recently Clicked
       </button>
       <button
         :class="{ active: sortMode === 'page' }"
@@ -71,6 +82,7 @@
 
         <div class="zone-meta">
           <span>Created: {{ formatDate(zone.createdAt) }}</span>
+          <span v-if="zone.lastClickedAt"> · Last clicked: {{ formatDateTime(zone.lastClickedAt) }}</span>
         </div>
       </div>
     </div>
@@ -262,6 +274,8 @@ const sortedZones = computed(() => {
       return zones.sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0))
     case 'recent':
       return zones.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    case 'clicked':
+      return zones.sort((a, b) => (b.lastClickedAt || 0) - (a.lastClickedAt || 0))
     case 'page':
       return zones.sort((a, b) => a.pageId.localeCompare(b.pageId))
     default:
@@ -303,6 +317,12 @@ const formatPoints = (coords) => {
 const formatDate = (timestamp) => {
   if (!timestamp) return 'Unknown'
   return new Date(timestamp).toLocaleDateString()
+}
+
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return 'Unknown'
+  const date = new Date(timestamp)
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 // Modal functions
@@ -451,13 +471,37 @@ const promoteZone = async (zone, targetPageId) => {
   padding: 20px;
 }
 
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
 h1 {
   margin-bottom: 5px;
 }
 
 .subtitle {
   color: #666;
-  margin-bottom: 20px;
+  margin: 0;
+}
+
+.graph-link {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.graph-link:hover {
+  background: #eee;
+  border-color: #ccc;
 }
 
 .sort-controls {

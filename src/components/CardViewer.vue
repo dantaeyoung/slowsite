@@ -69,7 +69,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { database } from '../firebase'
-import { ref as dbRef, push, get, set, increment } from 'firebase/database'
+import { ref as dbRef, push, get, set, update, increment } from 'firebase/database'
 
 const props = defineProps({
   pageData: {
@@ -233,14 +233,18 @@ const saveProvisionalZone = async (rect) => {
 
 const handleProvisionalClick = async (zone) => {
   try {
-    // Increment click count
-    const zoneRef = dbRef(database, `provisionalZones/${props.pageData.pageId}/${zone.zoneId}/clickCount`)
-    await set(zoneRef, increment(1))
+    // Increment click count and update lastClickedAt
+    const zoneRef = dbRef(database, `provisionalZones/${props.pageData.pageId}/${zone.zoneId}`)
+    await update(zoneRef, {
+      clickCount: increment(1),
+      lastClickedAt: Date.now()
+    })
 
     // Update local state
     const idx = provisionalZones.value.findIndex(z => z.zoneId === zone.zoneId)
     if (idx !== -1) {
       provisionalZones.value[idx].clickCount++
+      provisionalZones.value[idx].lastClickedAt = Date.now()
     }
   } catch (error) {
     console.error('Error logging provisional click:', error)
