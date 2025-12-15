@@ -1,3 +1,5 @@
+# WARNING: VIBECODED
+
 # SlowSite
 
 A hand-drawn website that grows iteratively based on visitor interest.
