@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
 import { getStorage } from 'firebase/storage'
+import { getAuth, GithubAuthProvider } from 'firebase/auth'
 
 // OPTION 1: Use environment variables (for development)
 // Create a .env file with VITE_FB_* variables
@@ -33,5 +34,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const database = getDatabase(app)
 const storage = getStorage(app)
+const auth = getAuth(app)
+const githubProvider = new GithubAuthProvider()
 
-export { app, database, storage }
+export { app, database, storage, auth, githubProvider }

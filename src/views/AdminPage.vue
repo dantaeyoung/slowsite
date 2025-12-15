@@ -1,11 +1,30 @@
 <template>
   <div class="admin-page">
+    <!-- Auth loading state -->
+    <div v-if="authLoading" class="auth-loading">
+      Loading...
+    </div>
+
+    <!-- Login screen -->
+    <div v-else-if="!isAuthenticated()" class="login-screen">
+      <h1>Admin Access</h1>
+      <p>Sign in with GitHub to continue</p>
+      <button @click="login" class="github-login-btn">
+        Sign in with GitHub
+      </button>
+    </div>
+
+    <!-- Admin content (authenticated) -->
+    <template v-else>
     <div class="admin-header">
       <div>
         <h1>Admin</h1>
         <p class="subtitle">Provisional zones & page connections</p>
       </div>
-      <router-link to="/admin/graph" class="graph-link mobile-only">View Page Graph</router-link>
+      <div class="header-actions">
+        <router-link to="/admin/graph" class="graph-link mobile-only">View Page Graph</router-link>
+        <button @click="logout" class="logout-btn">Logout</button>
+      </div>
     </div>
 
     <div class="admin-layout">
@@ -234,6 +253,7 @@
         <button @click="closeModal" class="close-btn">Close</button>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -244,8 +264,10 @@ import { database, storage } from '../firebase'
 import PageGraph from '../components/PageGraph.vue'
 import { ref as dbRef, get, set, update, remove, push } from 'firebase/database'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const { user, loading: authLoading, login, logout, isAuthenticated } = useAuth()
 
 const loading = ref(true)
 const allZones = ref([])
@@ -665,6 +687,62 @@ const goToPage = (pageId) => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.auth-loading {
+  text-align: center;
+  padding: 60px;
+  color: #666;
+}
+
+.login-screen {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.login-screen h1 {
+  margin-bottom: 10px;
+}
+
+.login-screen p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.github-login-btn {
+  padding: 14px 28px;
+  background: #24292e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.github-login-btn:hover {
+  background: #1a1e22;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: #eee;
+  color: #333;
 }
 
 .admin-layout {

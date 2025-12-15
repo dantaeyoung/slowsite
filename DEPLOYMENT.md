@@ -127,3 +127,52 @@ All these options have generous free tiers:
 - **GitHub Pages**: Unlimited for public repos (free)
 
 For a small personal site with index card images, you'll stay well within free limits.
+
+## Admin Authentication (GitHub Login)
+
+The `/admin` page is protected by GitHub authentication. To set it up:
+
+### Step 1: Enable GitHub Auth in Firebase
+
+1. Go to [Firebase Console](https://console.firebase.google.com) → your project
+2. **Authentication** → **Sign-in method** → **Add new provider**
+3. Select **GitHub** and enable it
+4. You'll see an **Authorization callback URL** - copy it (looks like `https://your-project.firebaseapp.com/__/auth/handler`)
+
+### Step 2: Create a GitHub OAuth App
+
+1. Go to GitHub → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**
+2. Fill in:
+   - **Application name**: `SlowSite Admin` (or anything you like)
+   - **Homepage URL**: Your site URL (e.g., `https://your-project.firebaseapp.com` or `http://localhost:5173` for dev)
+   - **Authorization callback URL**: Paste the callback URL from Firebase
+3. Click **Register application**
+4. Copy the **Client ID**
+5. Click **Generate a new client secret** and copy the **Client Secret**
+
+### Step 3: Add Credentials to Firebase
+
+1. Back in Firebase Console → Authentication → GitHub provider
+2. Paste the **Client ID** and **Client Secret** from GitHub
+3. Click **Save**
+
+### Step 4: Whitelist Your GitHub Username (Optional)
+
+By default, any GitHub user can log in. To restrict access to only yourself:
+
+1. Log in once at `/admin` - check the browser console for your GitHub username
+2. Edit `src/composables/useAuth.js`:
+
+```javascript
+const ALLOWED_USERS = [
+  'your-github-username'
+]
+```
+
+3. Rebuild and redeploy
+
+### Troubleshooting
+
+- **Popup blocked**: Make sure popups are allowed for your site
+- **Redirect mismatch**: Ensure the callback URL in GitHub exactly matches Firebase
+- **Auth domain**: If using a custom domain, add it to Firebase Console → Authentication → Settings → Authorized domains
